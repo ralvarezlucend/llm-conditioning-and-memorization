@@ -1,0 +1,19 @@
+# @package _global_
+
+defaults:
+    - /train
+    - override /dataset: npz
+    - override /model: 14M
+    - override /hydra/launcher: ray
+    - _self_
+
+dataset_name: ???
+
+training:
+  max_steps: 4000
+  wandb_tags: ["conditions-vary-n-14M"]
+
+hydra:
+    sweeper:
+        params:
+            dataset_name: conditions-vary-n/level0_lookup_V100_N24000_seed0,conditions-vary-n/level1_lookup_pos2_V100_N24000_seed0,conditions-vary-n/level2a_random_lookup_V100_N24000_seed0,conditions-vary-n/level2a_lookback_lookup_lookback2_V100_N24000_seed0

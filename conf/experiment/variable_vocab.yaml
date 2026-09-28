@@ -1,0 +1,11 @@
+# @package _global_
+
+defaults:
+  - /train
+  - override /hydra/launcher: ray
+  - _self_
+
+hydra:
+  sweeper:
+    params:
+      dataset: var-vocab-v16, var-vocab-v1024

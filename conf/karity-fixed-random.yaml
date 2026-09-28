@@ -1,0 +1,25 @@
+generate_train_configs: true
+mode: karity
+config_name_prefix: karity_fixed_random
+
+train_defaults_overrides:
+  - "override /model: 7M-1L"
+
+train_overrides:
+  compile_model: false
+  max_steps: 4000
+  save_steps: 500
+  wandb_tags: ["karity-fixed-random", "one-layer-attention"]
+
+base_params:
+  seq_len: 100
+  num_samples: 6000
+  vocab_size: 100
+  prefix_len: 50
+  seeds: [0]
+  pos_fn_type: "fixed_random"
+
+datasets:
+  - K: 1
+  - K: 2
+  - K: 3

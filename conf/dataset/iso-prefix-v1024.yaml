@@ -1,0 +1,9 @@
+_target_: dataset.variable_vocab.VariableVocabDataset
+prefix_vocab_size: 1024
+prefix_length: 24
+suffix_vocab_size: 128
+suffix_length: 50
+length: 74
+mask_prefix_in_loss: true
+seed: 0
+repeated_pool_size: 2000

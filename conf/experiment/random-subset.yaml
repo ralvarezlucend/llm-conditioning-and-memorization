@@ -1,0 +1,15 @@
+# @package _global_
+
+defaults:
+  - /train
+  - override /hydra/launcher: ray
+  - _self_
+
+hydra:
+  sweeper:
+    params:
+      dataset: hybrid
+      dataset.total_size: 1000
+      dataset.use_digit_tokens: false
+      dataset.token_subset_size: 1000, 10000
+      dataset.token_subset_seed: 0

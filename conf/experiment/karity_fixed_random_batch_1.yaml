@@ -1,0 +1,21 @@
+# @package _global_
+
+defaults:
+    - /train
+    - override /dataset: npz
+    - override /model: 7M-1L
+    - override /hydra/launcher: ray
+    - _self_
+
+dataset_name: ???
+
+training:
+  compile_model: false
+  max_steps: 4000
+  save_steps: 500
+  wandb_tags: ["karity-fixed-random", "one-layer-attention"]
+
+hydra:
+    sweeper:
+        params:
+            dataset_name: karity_K1_fixed_random_V100_N6000_seed0,karity_K2_fixed_random_V100_N6000_seed0,karity_K3_fixed_random_V100_N6000_seed0

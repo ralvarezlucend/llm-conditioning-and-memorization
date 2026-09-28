@@ -1,0 +1,15 @@
+# @package _global_
+
+defaults:
+  - /train
+  - override /hydra/launcher: ray
+  - _self_
+
+training:
+  batch_size: 64
+  max_steps: 1200
+
+hydra:
+  sweeper:
+    params:
+      dataset: wikitext-nl,wikitext-translated,wikitext-translated-uid,wikitext-translated-uid5

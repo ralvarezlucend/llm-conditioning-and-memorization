@@ -1,0 +1,5 @@
+_target_: dataset.WikitextSimpleDataset
+seed: 42
+prefix_length: 50
+suffix_length: 50
+tokenized_data_path: wikitext_prefix_paraphrase_control

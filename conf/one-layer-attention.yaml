@@ -1,0 +1,32 @@
+generate_train_configs: true
+config_name_prefix: one_layer_attention
+
+train_defaults_overrides:
+  - "override /model: 7M-1L"
+
+train_overrides:
+  compile_model: false
+  max_steps: 2000
+  wandb_tags: ["one-layer-attention"]
+
+base_params:
+  seq_len: 100
+  num_samples: 6000
+  vocab_size: 100
+  prefix_len: 50
+  random_prefix: True
+  seeds: [0]
+  aggregation: "lookup"
+  hint_position_limit: "less_than_prefix_len"
+
+datasets:
+  - target_level: "1"
+    pos: 5
+  - target_level: "1"
+    pos: 20
+  - target_level: "2a"
+    strategy: "lookback"
+    lookback: 2
+  - target_level: "2a"
+    strategy: "modulo"
+    modulus: 10

@@ -1,0 +1,10 @@
+_target_: dataset.WikitextDataset
+min_length: 100
+max_length: 300
+seed: -1
+repeated_batch_ratio: 0.4
+repeated_pool_size: 500
+prefix_length: 50
+suffix_length: 50
+tokenized_data_path: wikitext_processed
+use_only_repeated: false

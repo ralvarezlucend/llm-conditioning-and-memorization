@@ -1,0 +1,12 @@
+_target_: dataset.wikitext_synthetic.WikitextSyntheticDataset
+total_size: 500
+synthetic_ratio: 0.5
+min_length: 100
+max_length: 300
+seed: -1 # TODO: share seed
+prefix_length: 50
+suffix_length: 50
+tokenized_data_path: "wikitext_processed"
+use_digit_tokens: false
+token_subset_size: null
+token_subset_seed: 0

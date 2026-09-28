@@ -1,0 +1,15 @@
+generate_train_configs: true
+mode: karity
+
+base_params:
+  seq_len: 100
+  num_samples: 20000
+  vocab_size: 100
+  prefix_len: 50
+  seeds: [0]
+  pos_fn_type: "random_map"
+
+datasets:
+  - K: 1
+  - K: 2
+  - K: 3

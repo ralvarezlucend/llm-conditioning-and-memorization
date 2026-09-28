@@ -1,0 +1,14 @@
+# @package _global_
+
+defaults:
+  - /train
+  - override /hydra/launcher: ray
+  - _self_
+
+hydra:
+  sweeper:
+    params:
+      dataset: synthetic
+      dataset.repeated_batch_ratio: 0.4
+      dataset.match_wikitext_config: false
+      dataset.vocab_size: 9 

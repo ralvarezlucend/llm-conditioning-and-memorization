@@ -1,0 +1,12 @@
+# @package _global_
+
+defaults:
+  - /train
+  - override /hydra/launcher: ray
+  - _self_
+
+hydra:
+  sweeper:
+    params:
+      dataset: wikitext
+      dataset.repeated_batch_ratio: 0.1, 0.4, 0.9

@@ -1,0 +1,9 @@
+_target_: dataset.wikitext_original_shuffled.WikitextOriginalShuffledDataset
+total_size: 500
+regular_ratio: 0.5  # fraction of sequences that are regular WikiText (vs shuffled)
+min_length: 100
+max_length: 300
+seed: -1 # TODO: share seed
+prefix_length: 50
+suffix_length: 50
+tokenized_data_path: "wikitext_processed"

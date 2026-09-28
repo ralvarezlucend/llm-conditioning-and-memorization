@@ -1,0 +1,12 @@
+# @package _global_
+
+defaults:
+  - /train
+  - override /hydra/launcher: ray
+  - _self_
+
+hydra:
+  sweeper:
+    params:
+      dataset: iso-info-vocab-1024, iso-info-vocab-16 # random fixed-length sequences with different vocab sizes but same information content
+      dataset.repeated_pool_size: 2500

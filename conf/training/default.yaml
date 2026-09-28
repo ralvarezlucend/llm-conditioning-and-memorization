@@ -1,0 +1,22 @@
+learning_rate: 5e-4
+weight_decay: 0.0
+warmup_steps: 100
+lr_scheduler_type: "cosine"
+optim: "adamw_torch"
+max_steps: 2000
+gradient_accumulation_steps: 1
+max_grad_norm: 1.0
+bf16: true
+save_steps: 0  # Don't save checkpoints
+logging_steps: 25
+dataloader_pin_memory: true
+report_to: wandb
+batch_size: 512
+seed: 0
+loss_logging_mode: "average"  # "average" or "current"
+ignore_pad_tokens_in_loss: true
+gradient_checkpointing: false
+compile_model: true    # torch.compile for faster training (model unwrapped before save)
+save_model: true      # set true to save model + metadata after training
+wandb_project: "memorization"
+wandb_tags: []

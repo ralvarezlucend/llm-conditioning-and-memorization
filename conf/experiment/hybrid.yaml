@@ -1,0 +1,13 @@
+# @package _global_
+
+defaults:
+  - /train
+  - override /hydra/launcher: ray
+  - _self_
+
+hydra:
+  sweeper:
+    params:
+      dataset: hybrid # mix of wikitext and synthetic data
+      model.freeze_embeddings_from_gpt2: true # freeze embeddings to control for increased capacity from larger vocab size
+      dataset.token_subset_size: 10,1000,10000 # pick a subset of tokens to use in vocab of synthetic data

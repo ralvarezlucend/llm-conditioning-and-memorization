@@ -1,0 +1,4 @@
+n_layer: 1
+n_head: 8
+n_embd: 512
+freeze_embeddings_from_gpt2: false

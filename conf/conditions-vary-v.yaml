@@ -1,0 +1,76 @@
+generate_train_configs: true
+train_config_batch_size: 4
+dataset_subdir: conditions-vary-v
+
+train_defaults_overrides:
+  - "override /model: 14M"
+
+train_overrides:
+  max_steps: 4000
+  wandb_tags: [conditions-vary-v]
+
+base_params:
+  seq_len: 100
+  num_samples: 48000
+  prefix_len: 50
+  random_prefix: True
+  seeds: [0]
+  aggregation: "lookup"
+  hint_position_limit: "less_than_prefix_len"
+
+datasets:
+  # V=10
+  - target_level: "0"
+    vocab_size: 10
+  - target_level: "1"
+    pos: 2
+    vocab_size: 10
+  - target_level: "2a"
+    strategy: "random"
+    vocab_size: 10
+  - target_level: "2a"
+    strategy: "lookback"
+    lookback: 2
+    vocab_size: 10
+
+  # V=100
+  - target_level: "0"
+    vocab_size: 100
+  - target_level: "1"
+    pos: 2
+    vocab_size: 100
+  - target_level: "2a"
+    strategy: "random"
+    vocab_size: 100
+  - target_level: "2a"
+    strategy: "lookback"
+    lookback: 2
+    vocab_size: 100
+
+  # V=1000
+  - target_level: "0"
+    vocab_size: 1000
+  - target_level: "1"
+    pos: 2
+    vocab_size: 1000
+  - target_level: "2a"
+    strategy: "random"
+    vocab_size: 1000
+  - target_level: "2a"
+    strategy: "lookback"
+    lookback: 2
+    vocab_size: 1000
+
+  # V=10000
+  - target_level: "0"
+    vocab_size: 10000
+  - target_level: "1"
+    pos: 2
+    vocab_size: 10000
+  - target_level: "2a"
+    strategy: "random"
+    vocab_size: 10000
+  - target_level: "2a"
+    strategy: "lookback"
+    lookback: 2
+    vocab_size: 10000

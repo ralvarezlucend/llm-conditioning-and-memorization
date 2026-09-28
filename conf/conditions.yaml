@@ -1,0 +1,30 @@
+generate_train_configs: true
+
+base_params:
+  seq_len: 100
+  num_samples: 6000
+  vocab_size: 100
+  prefix_len: 50
+  random_prefix: True
+  seeds: [0, 1, 2]
+  aggregation: "lookup"
+  hint_position_limit: "less_than_prefix_len"
+
+datasets:
+  - target_level: "0"
+  - target_level: "1"
+    pos: 2
+  - target_level: "2a"
+    strategy: "random"
+  - target_level: "2a"
+    strategy: "sin"
+  - target_level: "2a"
+    strategy: "lookback"
+    lookback: 2
+  - target_level: "2a"
+    strategy: "modulo"
+    modulus: 10
+  - target_level: "2a"
+    strategy: "polynomial_prime"
+    polynomial_degree: 3
+    prime_modulus: 1009

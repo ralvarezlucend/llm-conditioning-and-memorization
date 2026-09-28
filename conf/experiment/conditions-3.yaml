@@ -1,0 +1,14 @@
+#@package _global_
+
+defaults:
+    - /train
+    - override /dataset: npz
+    - override /hydra/launcher: ray
+    - _self_
+
+dataset_name: ???
+
+hydra:
+    sweeper:
+        params:
+            dataset_name: level1_lookup_pos2_seed1,level2a_random_lookup_seed1,level1_lookup_pos2_seed2,level2a_random_lookup_seed2

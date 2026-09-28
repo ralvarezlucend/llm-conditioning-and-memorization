@@ -1,0 +1,87 @@
+generate_train_configs: true
+train_config_batch_size: 4
+dataset_subdir: conditions-vary-n
+
+train_overrides:
+  max_steps: 4000
+  wandb_tags: [conditions-vary-n]
+
+base_params:
+  seq_len: 100
+  vocab_size: 100
+  prefix_len: 50
+  random_prefix: True
+  seeds: [0]
+  aggregation: "lookup"
+  hint_position_limit: "less_than_prefix_len"
+
+datasets:
+  # N=500
+  - target_level: "0"
+    num_samples: 500
+  - target_level: "1"
+    pos: 2
+    num_samples: 500
+  - target_level: "2a"
+    strategy: "random"
+    num_samples: 500
+  - target_level: "2a"
+    strategy: "lookback"
+    lookback: 2
+    num_samples: 500
+
+  # N=2000
+  - target_level: "0"
+    num_samples: 2000
+  - target_level: "1"
+    pos: 2
+    num_samples: 2000
+  - target_level: "2a"
+    strategy: "random"
+    num_samples: 2000
+  - target_level: "2a"
+    strategy: "lookback"
+    lookback: 2
+    num_samples: 2000
+
+  # N=6000
+  - target_level: "0"
+    num_samples: 6000
+  - target_level: "1"
+    pos: 2
+    num_samples: 6000
+  - target_level: "2a"
+    strategy: "random"
+    num_samples: 6000
+  - target_level: "2a"
+    strategy: "lookback"
+    lookback: 2
+    num_samples: 6000
+
+  # N=12000
+  - target_level: "0"
+    num_samples: 12000
+  - target_level: "1"
+    pos: 2
+    num_samples: 12000
+  - target_level: "2a"
+    strategy: "random"
+    num_samples: 12000
+  - target_level: "2a"
+    strategy: "lookback"
+    lookback: 2
+    num_samples: 12000
+
+  # N=24000
+  - target_level: "0"
+    num_samples: 24000
+  - target_level: "1"
+    pos: 2
+    num_samples: 24000
+  - target_level: "2a"
+    strategy: "random"
+    num_samples: 24000
+  - target_level: "2a"
+    strategy: "lookback"
+    lookback: 2
+    num_samples: 24000

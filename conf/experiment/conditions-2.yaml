@@ -1,0 +1,14 @@
+#@package _global_
+
+defaults:
+    - /train
+    - override /dataset: npz
+    - override /hydra/launcher: ray
+    - _self_
+
+dataset_name: ???
+
+hydra:
+    sweeper:
+        params:
+            dataset_name: level2a_lookback_lookup_lookback2_seed0,level2a_modulo_lookup_modulus10_seed0,level2a_polynomial_prime_lookup_polynomial_degree3_prime_modulus1009_seed0

@@ -1,0 +1,11 @@
+# @package _global_
+
+defaults:
+  - /train
+  - override /hydra/launcher: ray
+  - _self_
+
+hydra:
+  sweeper:
+    params:
+      training.learning_rate: 5e-5, 2e-4, 5e-4

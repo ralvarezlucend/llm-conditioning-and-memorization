@@ -1,0 +1,27 @@
+# @package _global_
+
+# Varies prefix vocab V while keeping prefix information constant (240 bits).
+# Tests whether vocab size / disambiguating power affects memorization when
+# prefix bits are exactly identical across all conditions.
+# Only the suffix is trained on (prefix is masked from loss).
+# Suffix is identical across all datasets: vocab=128, length=50.
+#
+# Prefix configurations (all 240 bits exactly):
+#   V=4,    L=120  (2 bits/token × 120)
+#   V=16,   L=60   (4 bits/token × 60)
+#   V=64,   L=40   (6 bits/token × 40)
+#   V=256,  L=30   (8 bits/token × 30)
+#   V=1024, L=24   (10 bits/token × 24)
+
+defaults:
+  - /train
+  - override /hydra/launcher: ray
+  - _self_
+
+hydra:
+  sweeper:
+    params:
+      dataset: iso-prefix-v4, iso-prefix-v16, iso-prefix-v64, iso-prefix-v256, iso-prefix-v1024
+      training.max_steps: 20000
+      dataset.repeated_pool_size: 2000
+      training.wandb_tags: [iso-prefix-info]

@@ -1,0 +1,6 @@
+# Generic config for NpzDataset
+# Usage: dataset=npz dataset_name=<name>
+# Example: dataset=npz dataset_name=level_0_strategy_formula_seed_42
+# Note: dataset_name must be defined at global level (not passed to constructor)
+_target_: dataset.npz_dataset.NpzDataset
+npz_path: datasets/${dataset_name}.npz

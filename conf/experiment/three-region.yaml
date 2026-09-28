@@ -1,0 +1,17 @@
+# @package _global_
+
+# Experiment to compare three-region datasets A1 and B1
+# Tests whether prefix disambiguating power affects memorization
+# when controlling for total information content and suffix-1 characteristics
+
+defaults:
+  - /train
+  - override /hydra/launcher: ray
+  - _self_
+
+hydra:
+  sweeper:
+    params:
+      dataset: three-region-a1, three-region-b1
+      training.max_steps: 20000
+      dataset.repeated_pool_size: 3000

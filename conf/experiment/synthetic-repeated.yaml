@@ -1,0 +1,13 @@
+# @package _global_
+
+defaults:
+  - /train
+  - override /hydra/launcher: ray
+  - _self_
+
+hydra:
+  sweeper:
+    params:
+      dataset: synthetic
+      dataset.use_only_repeated: true
+      dataset.match_wikitext_config: true

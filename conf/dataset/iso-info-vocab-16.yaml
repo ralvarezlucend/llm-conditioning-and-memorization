@@ -1,0 +1,8 @@
+_target_: dataset.repeated_random_fixed.RepeatedRandomFixedLengthDataset
+# bits per token log2(16)=4; total bits per sequence: 4*250=1000
+vocab_size: 16
+length: 250
+prefix_length: 125
+suffix_length: 125
+seed: 0
+repeated_pool_size: 1000

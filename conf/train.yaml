@@ -1,0 +1,4 @@
+defaults:
+  - dataset: npz
+  - model: 7M
+  - training: default

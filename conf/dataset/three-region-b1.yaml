@@ -1,0 +1,11 @@
+_target_: dataset.three_region_variable_vocab.ThreeRegionVariableVocabDataset
+prefix_vocab_size: 128
+prefix_length: 50
+suffix1_vocab_size: 1024
+suffix1_length: 50
+suffix2_vocab_size: 8 
+suffix2_length: 50  
+length: 150
+seed: 0
+repeated_pool_size: 2000
+ignore_pad_tokens_in_loss: true

@@ -1,0 +1,18 @@
+# @package _global_
+
+defaults:
+  - /train
+  - override /dataset: wikitext-prefix-paraphrase
+  - override /model: 7M
+  - override /hydra/launcher: ray
+  - _self_
+
+training:
+  batch_size: 64
+  max_steps: 1400
+  wandb_tags: ["prefix-paraphrase-7M"]
+
+hydra:
+  sweeper:
+    params:
+      dataset: wikitext-prefix-paraphrase,wikitext-prefix-paraphrase-control
