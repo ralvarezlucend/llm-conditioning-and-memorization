@@ -2,7 +2,12 @@
 
 Presented at the following NeurIPS 2026 workshops:
 
-- Global South AI
+- [MPLR-FM](https://neurips-workshop2026.github.io/foundation_model_agentic_privacy/call_for_papers.html)
+- [FLMSec](https://flmsec.github.io)
+- [PriGM](https://sites.google.com/view/prigmneurips2026/call-for-papers?authuser=1)
+- [ATTRIB](https://attrib-workshop.cc/#call)
+- [LP4FM](https://lp4fm.github.io/#call)
+- [GlobalSouthAI](https://sites.google.com/view/globalsouthai-neurips26/home)
 
 ## Abstract
 
