@@ -1,0 +1,63 @@
+cff-version: 1.2.0
+message: "If you use this code or build on this work, please cite the paper below."
+title: "Conditioning Structure, Not Entropy Alone, Predicts Memorization Dynamics"
+type: software
+authors:
+  - family-names: "Alvarez Lucendo"
+    given-names: "Rodrigo"
+    affiliation: "EPFL"
+  - family-names: "Panwar"
+    given-names: "Madhur"
+    affiliation: "EPFL"
+  - family-names: "Weiss"
+    given-names: "Gail"
+    affiliation: "EPFL"
+  - family-names: "Bosselut"
+    given-names: "Antoine"
+    affiliation: "EPFL"
+repository-code: "https://github.com/ralvarezlucend/llm-conditioning-and-memorization"
+url: "https://ralvarezlucend.github.io/llm-conditioning-and-memorization/"
+abstract: >-
+  Autoregressive language models do not memorize every training sequence at
+  the same rate; yet, commonly studied predictors, such as entropy,
+  tokenization, context length, model capacity, and repetition, do not specify
+  how a model uses its prefix to retrieve a continuation. We study a
+  complementary axis: the complexity of the conditioning structure that
+  disambiguates one training sequence from the others. In controlled
+  GPT-2-style experiments, uniformly random prefixes with the same total
+  information content are easier to use when their information is concentrated
+  into fewer, more distinctive tokens. We construct synthetic datasets whose
+  suffixes are deterministic under rules of increasing complexity: a local
+  position-aware transition, a fixed prefix cue, or a position-dependent prefix
+  cue. The resulting memorization curves preserve this ordering across one- and
+  four-layer models and across dataset sizes from 500 to 24,000 sequences. In
+  one-layer models, attention patterns visibly follow the planted cue
+  locations. However, analogous interventions on WikiText yield no detectable
+  separation. These results support disambiguation complexity as a useful
+  controlled axis for studying memorization and, more broadly, training
+  dynamics.
+keywords:
+  - memorization
+  - language models
+  - transformers
+  - training dynamics
+  - attention
+preferred-citation:
+  type: conference-paper
+  title: "Conditioning Structure, Not Entropy Alone, Predicts Memorization Dynamics"
+  authors:
+    - family-names: "Alvarez Lucendo"
+      given-names: "Rodrigo"
+      affiliation: "EPFL"
+    - family-names: "Panwar"
+      given-names: "Madhur"
+      affiliation: "EPFL"
+    - family-names: "Weiss"
+      given-names: "Gail"
+      affiliation: "EPFL"
+    - family-names: "Bosselut"
+      given-names: "Antoine"
+      affiliation: "EPFL"
+  collection-title: "NeurIPS 2026 Workshops"
+  year: 2026
+  url: "https://ralvarezlucend.github.io/llm-conditioning-and-memorization/"

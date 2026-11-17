@@ -1,5 +1,7 @@
 # Conditioning Structure, Not Entropy Alone, Predicts Memorization Dynamics
 
+**[Project page](https://ralvarezlucend.github.io/llm-conditioning-and-memorization/)** · [Paper (PDF)](https://ralvarezlucend.github.io/llm-conditioning-and-memorization/static/paper.pdf) · [Poster](https://ralvarezlucend.github.io/llm-conditioning-and-memorization/static/poster.png)
+
 Presented at the following NeurIPS 2026 workshops:
 
 - [MPLR-FM](https://neurips-workshop2026.github.io/foundation_model_agentic_privacy/call_for_papers.html)
@@ -47,13 +49,13 @@ Analysis notebooks use W&B histories; update their entity, project, and tag filt
 
 ## Citation
 
-If you use this work, please cite:
+If you use this work, please cite it (GitHub's "Cite this repository" button gives the same entry, from [CITATION.cff](CITATION.cff)):
 
 ```bibtex
-@misc{alvarezlucendo2026conditioning,
-  title = {Conditioning Structure, Not Entropy Alone, Predicts Memorization Dynamics},
-  author = {Alvarez Lucendo, Rodrigo and Panwar, Madhur and Weiss, Gail and Bosselut, Antoine},
-  year = {2026},
-  note = {Presented at the Global South AI workshop, NeurIPS 2026}
+@inproceedings{alvarezlucendo2026conditioning,
+  title     = {Conditioning Structure, Not Entropy Alone, Predicts Memorization Dynamics},
+  author    = {Alvarez Lucendo, Rodrigo and Panwar, Madhur and Weiss, Gail and Bosselut, Antoine},
+  booktitle = {NeurIPS 2026 Workshops},
+  year      = {2026}
 }
 ```
