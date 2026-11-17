@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Conditioning Structure, Not Entropy Alone, Predicts Memorization Dynamics</title>
+  <meta name="description" content="Language models memorize training sequences at different rates. Controlling the conditioning structure that disambiguates a sequence, not just its entropy, predicts how fast it is memorized. NeurIPS 2026 Workshops, EPFL.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Conditioning Structure, Not Entropy Alone, Predicts Memorization Dynamics">
+  <meta property="og:description" content="Same bits, different speed: the complexity of the cue that disambiguates a training sequence predicts how fast a transformer memorizes it.">
+  <meta property="og:image" content="https://ralvarezlucend.github.io/llm-conditioning-and-memorization/static/figures/conditions_14m.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff0000'/%3E%3Cpath d='M9 9h14v3H13v3h9v3h-9v3h10v3H9z' fill='white'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #15171c;
+      --ink-2: #3b404b;
+      --muted: #666c78;
+      --faint: #9aa0ab;
+      --line: #e6e7eb;
+      --panel: #f6f6f9;
+      --bg: #ffffff;
+      --red: #ff0000;          /* EPFL red, for marks */
+      --red-ink: #c4161c;      /* readable red, for text */
+      --l0: #f77189; --l0-soft: #fde8ec; --l0-ink: #b3304d;
+      --l1: #50b131; --l1-soft: #e4f4de; --l1-ink: #2c7419;
+      --l2: #3ba3ec; --l2-soft: #e2f0fc; --l2-ink: #19679f;
+      --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --serif: "Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      font-family: var(--serif); font-size: 18px; line-height: 1.65;
+      -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+    }
+    img { max-width: 100%; height: auto; display: block; }
+    a { color: var(--red-ink); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+    a:hover { text-decoration-thickness: 2px; }
+    sub, sup { line-height: 0; }
+    .wrap { max-width: 1060px; margin: 0 auto; padding: 0 28px; }
+    .prose { max-width: 740px; }
+    .center { margin-left: auto; margin-right: auto; }
+    .m { font-family: var(--serif); font-style: normal; white-space: nowrap; }
+    .m i { font-style: italic; }
+
+    /* ---------- nav ---------- */
+    .nav {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(255,255,255,.88); backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px);
+      border-bottom: 1px solid transparent; transition: border-color .2s;
+    }
+    .nav.scrolled { border-bottom-color: var(--line); }
+    .nav .wrap { display: flex; align-items: center; gap: 28px; height: 58px; }
+    .nav .logo img { height: 20px; width: auto; }
+    .nav ul { display: flex; gap: 22px; list-style: none; margin: 0; padding: 0; font: 500 14px/1 var(--sans); }
+    .nav ul a { color: var(--muted); text-decoration: none; padding: 6px 0; border-bottom: 2px solid transparent; }
+    .nav ul a:hover, .nav ul a.active { color: var(--ink); }
+    .nav ul a.active { border-bottom-color: var(--red); }
+    .nav .quick { margin-left: auto; display: flex; gap: 8px; }
+    .nav .quick a {
+      font: 600 13px/1 var(--sans); color: var(--ink); text-decoration: none;
+      padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; display: inline-flex; gap: 6px; align-items: center;
+    }
+    .nav .quick a:hover { border-color: var(--ink); }
+    .nav .quick svg { width: 14px; height: 14px; }
+
+    /* ---------- hero ---------- */
+    .hero { text-align: center; padding: 64px 0 28px; }
+    .venue {
+      display: inline-flex; align-items: center; gap: 8px;
+      font: 600 13px/1.3 var(--sans); letter-spacing: .01em; color: var(--red-ink);
+      background: #fff1f1; border: 1px solid #ffd6d6; padding: 7px 14px; border-radius: 999px; margin-bottom: 26px;
+    }
+    .venue::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
+    h1 {
+      font: 800 clamp(30px, 4.6vw, 50px)/1.1 var(--sans); letter-spacing: -0.025em; margin: 0 auto 26px; max-width: 920px;
+      text-wrap: balance;
+    }
+    .authors { font: 500 19px/1.6 var(--sans); margin: 0 0 6px; display: flex; flex-wrap: wrap; justify-content: center; column-gap: 26px; row-gap: 2px; }
+    .authors sup { color: var(--red-ink); font-size: .7em; margin-left: 1px; }
+    .affil { font: 400 16px/1.4 var(--sans); color: var(--muted); margin: 8px 0 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .affil img { height: 15px; width: auto; }
+    .buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 30px 0 14px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 9px; padding: 11px 20px; border-radius: 999px;
+      background: var(--ink); color: #fff; text-decoration: none; font: 600 15px/1 var(--sans);
+      transition: background .15s;
+    }
+    .btn:hover { background: #2b2f38; }
+    .btn svg { width: 17px; height: 17px; flex: none; }
+    .btn.ghost { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1px #d5d7dd; }
+    .btn.ghost:hover { box-shadow: inset 0 0 0 1px var(--ink); background: #fff; }
+    .footnote { font: 400 13px/1.4 var(--sans); color: var(--faint); margin: 10px 0 0; }
+
+    /* ---------- tldr + teaser ---------- */
+    .tldr {
+      max-width: 800px; margin: 36px auto 0; text-align: center;
+      font: 400 clamp(19px, 2.2vw, 23px)/1.5 var(--serif); color: var(--ink-2);
+    }
+    .tldr b { color: var(--ink); font-weight: 600; }
+    .teaser { margin: 44px 0 0; }
+    .pair { display: grid; gap: 28px; align-items: end; }
+    .pair.teaser-grid { grid-template-columns: 2.03fr 1.68fr; }
+    .subcap { font: 500 14px/1.4 var(--sans); color: var(--ink-2); margin-top: 10px; text-align: center; }
+    .subcap span { color: var(--faint); margin-right: 4px; }
+
+    figure { margin: 0; }
+    figcaption, .caption { font: 400 14.5px/1.55 var(--sans); color: var(--muted); margin-top: 14px; }
+    figcaption b, .caption b { color: var(--ink); font-weight: 600; }
+    a.zoom { display: block; cursor: zoom-in; border-radius: 6px; outline-offset: 4px; }
+    a.zoom img { border-radius: 4px; }
+
+    /* ---------- sections ---------- */
+    section { padding: 64px 0 0; }
+    .eyebrow { font: 700 12.5px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--red-ink); margin: 0 0 12px; }
+    h2 { font: 800 clamp(26px, 3vw, 34px)/1.15 var(--sans); letter-spacing: -0.02em; margin: 0 0 18px; }
+    h3 { font: 700 21px/1.3 var(--sans); letter-spacing: -0.01em; margin: 0 0 12px; }
+    p { margin: 0 0 16px; }
+    hr.sep { border: 0; border-top: 1px solid var(--line); margin: 64px 0 0; }
+
+    .abstract { font-size: 18.5px; color: var(--ink-2); }
+    .abstract p:last-child { margin-bottom: 0; }
+
+    /* ---------- method ---------- */
+    .callout {
+      background: var(--panel); border-radius: 14px; padding: 20px 24px; margin: 26px 0 0;
+      font: 400 16px/1.6 var(--sans); color: var(--ink-2);
+    }
+    .callout strong { color: var(--ink); }
+    .callout .m { font-size: 17px; }
+    .levels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 34px; }
+    .level {
+      border: 1px solid var(--line); border-radius: 16px; padding: 20px 20px 18px; background: #fff;
+      display: flex; flex-direction: column; position: relative; overflow: hidden;
+    }
+    .level::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--c); }
+    .level[data-level="0"] { --c: var(--l0); --soft: var(--l0-soft); --cink: var(--l0-ink); }
+    .level[data-level="1"] { --c: var(--l1); --soft: var(--l1-soft); --cink: var(--l1-ink); }
+    .level[data-level="2"] { --c: var(--l2); --soft: var(--l2-soft); --cink: var(--l2-ink); }
+    .level .tag { font: 700 12px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--cink); margin: 4px 0 6px; }
+    .level h3 { font-size: 19px; margin: 0 0 6px; }
+    .level .rule { font-size: 17px; color: var(--ink-2); margin: 0 0 10px; }
+    .level svg.seq { width: 100%; height: auto; margin: 4px 0 8px; }
+    .level .desc { font: 400 14.5px/1.55 var(--sans); color: var(--muted); margin: 12px 0 0; }
+    table.cue { width: 100%; border-collapse: collapse; font: 500 13.5px/1.3 var(--sans); font-variant-numeric: tabular-nums; }
+    table.cue th { text-align: left; font: 500 12.5px/1.3 var(--sans); color: var(--faint); padding: 7px 0; white-space: nowrap; }
+    table.cue th .m { font-size: 14px; color: var(--muted); }
+    table.cue td { text-align: center; padding: 7px 0; width: 16%; color: var(--ink-2); }
+    table.cue tr + tr > * { border-top: 1px solid var(--line); }
+    table.cue tr:first-child td { color: var(--cink); font-weight: 700; }
+    table.cue .k { display: inline-block; min-width: 24px; background: var(--soft); color: var(--cink); border: 1px solid var(--c); border-radius: 6px; padding: 2px 0; font-weight: 700; }
+    table.cue td.none { color: var(--faint); }
+
+    .specs { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 18px; margin-top: 18px; }
+    .spec { font: 400 14.5px/1.55 var(--sans); color: var(--muted); padding-top: 14px; border-top: 2px solid var(--ink); }
+    .spec b { display: block; font: 700 13px/1.3 var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--ink); margin-bottom: 6px; }
+
+    /* ---------- findings ---------- */
+    .finding { padding-top: 56px; }
+    .finding:first-of-type { padding-top: 18px; }
+    .finding-head { display: flex; gap: 14px; align-items: baseline; }
+    .num {
+      flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--red); color: #fff;
+      font: 700 15px/30px var(--sans); text-align: center; transform: translateY(-3px);
+    }
+    .finding-body { margin-left: 44px; }
+    .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 40px; align-items: start; }
+    .fig-block { margin-top: 26px; }
+    .note {
+      font: 400 14.5px/1.55 var(--sans); color: var(--muted);
+      border-left: 3px solid var(--line); padding: 2px 0 2px 14px; margin: 18px 0 0;
+    }
+    .badge {
+      display: inline-block; font: 700 11.5px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase;
+      padding: 5px 9px; border-radius: 999px; background: #f1f2f4; color: var(--muted); vertical-align: 4px; margin-left: 8px;
+    }
+    .stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin: 22px 0 0; }
+    .stat { border-radius: 12px; padding: 14px 14px 12px; background: var(--soft); }
+    .stat .v { font: 800 22px/1.1 var(--sans); color: var(--cink); letter-spacing: -0.01em; white-space: nowrap; }
+    .stat .l { font: 500 12.5px/1.35 var(--sans); color: var(--ink-2); margin-top: 6px; }
+    .stat.s0 { --soft: var(--l0-soft); --cink: var(--l0-ink); }
+    .stat.s1 { --soft: var(--l1-soft); --cink: var(--l1-ink); }
+    .stat.s2 { --soft: var(--l2-soft); --cink: var(--l2-ink); }
+
+    .rules { position: relative; height: 2.4em; margin-top: 8px; font-size: 15.5px; color: var(--ink-2); }
+    .rules span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+    .karity-grid { grid-template-columns: 1.333fr 2.736fr; align-items: end; }
+
+    /* ---------- takeaways ---------- */
+    .takeaways { list-style: none; padding: 0; margin: 8px 0 0; counter-reset: t; display: grid; gap: 14px; }
+    .takeaways li {
+      counter-increment: t; position: relative; padding: 18px 22px 18px 66px; background: var(--panel); border-radius: 14px;
+      font-size: 17.5px; color: var(--ink-2);
+    }
+    .takeaways li::before {
+      content: counter(t); position: absolute; left: 22px; top: 18px; width: 28px; height: 28px; border-radius: 50%;
+      background: var(--red); color: #fff; font: 700 14px/28px var(--sans); text-align: center;
+    }
+    .takeaways b { color: var(--ink); font-weight: 600; }
+
+    /* ---------- poster + bibtex ---------- */
+    .poster-wrap { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 40px; align-items: center; }
+    .poster-wrap a.zoom img { box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 12px 40px -12px rgba(20,22,28,.28); border: 1px solid var(--line); }
+    .bib { position: relative; margin-top: 6px; }
+    .bib pre {
+      margin: 0; background: #16181d; color: #e8e9ed; border-radius: 14px; padding: 22px 24px; overflow-x: auto;
+      font: 400 13.5px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .copy {
+      position: absolute; top: 12px; right: 12px; font: 600 12.5px/1 var(--sans); color: #e8e9ed; background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.18); border-radius: 8px; padding: 8px 11px; cursor: pointer;
+    }
+    .copy:hover { background: rgba(255,255,255,.16); }
+
+    footer { margin-top: 80px; border-top: 1px solid var(--line); padding: 28px 0 40px; font: 400 13.5px/1.6 var(--sans); color: var(--faint); }
+    footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
+    footer img { height: 16px; width: auto; }
+    footer a { color: var(--muted); }
+
+    /* ---------- lightbox ---------- */
+    .lightbox {
+      position: fixed; inset: 0; z-index: 50; background: rgba(250,250,252,.96); display: flex;
+      align-items: center; justify-content: center; padding: 48px 24px; cursor: zoom-out;
+      opacity: 0; visibility: hidden; transition: opacity .22s ease, visibility 0s linear .22s;
+    }
+    .lightbox.open { opacity: 1; visibility: visible; transition: opacity .22s ease; }
+    .lightbox img { max-width: min(1500px, 100%); max-height: 100%; object-fit: contain; box-shadow: 0 20px 60px -20px rgba(0,0,0,.35); border-radius: 6px; background: #fff; }
+    .lightbox button {
+      position: absolute; top: 14px; right: 16px; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line);
+      background: #fff; font: 400 24px/1 var(--sans); color: var(--ink); cursor: pointer;
+    }
+
+    /* ---------- motion ----------
+       Only one animation: each Level diagram fills in its suffix one token at a time, showing where each token's cue comes from.
+       Off for viewers who ask for reduced motion (they get the finished diagram). */
+    .replay {
+      position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 50%;
+      border: 1px solid var(--line); background: #fff; color: var(--faint); display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0;
+    }
+    .replay:hover { color: var(--cink); border-color: var(--c); }
+    .replay svg { width: 14px; height: 14px; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .replay { display: none; } }
+    @media (prefers-reduced-motion: no-preference) {
+      .level.armed svg .arc { stroke-dasharray: 1 2; transition: stroke-dashoffset .5s cubic-bezier(.5, 0, .3, 1) calc(var(--k) * .7s); }
+      .level.armed:not(.play) svg .arc { stroke-dashoffset: 1; }
+      .level.armed svg .head { transition: opacity .12s linear calc(var(--k) * .7s + .45s); }
+      .level.armed:not(.play) svg .head { opacity: 0; }
+      .level.armed svg .tgt { transition: opacity .25s ease calc(var(--k) * .7s + .5s); }
+      .level.armed:not(.play) svg .tgt { opacity: 0; }
+      .level.reset * { transition: none !important; }
+    }
+    @media print { .nav, .replay { display: none; } .level svg * { opacity: 1 !important; stroke-dashoffset: 0 !important; } }
+
+    /* ---------- responsive ---------- */
+    @media (max-width: 900px) {
+      .levels { grid-template-columns: 1fr; max-width: 460px; margin-left: auto; margin-right: auto; }
+      .split, .poster-wrap { grid-template-columns: 1fr; gap: 26px; }
+      .poster-wrap a.zoom { max-width: 420px; }
+      .nav ul { display: none; }
+      /* formula labels no longer fit under each heatmap: switch to a 2x2 labelled grid */
+      .rules { position: static; height: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 15px; margin-top: 12px; }
+      .rules span { position: static; transform: none; white-space: normal; }
+      .rules span::before { content: attr(data-label); display: block; font: 500 11.5px/1.3 var(--sans); color: var(--faint); }
+    }
+    @media (max-width: 700px) {
+      body { font-size: 17px; }
+      .wrap { padding: 0 16px; }
+      .hero { padding-top: 40px; }
+      .authors { font-size: 17px; column-gap: 16px; }
+      .pair.teaser-grid, .karity-grid { grid-template-columns: 1fr; }
+      .finding-body { margin-left: 0; }
+      .specs, .stats { grid-template-columns: 1fr; }
+      .rules { font-size: 14px; gap: 6px 14px; }
+      h1 { font-size: clamp(26px, 8vw, 34px); }
+      .takeaways li { padding-left: 58px; font-size: 16.5px; }
+      .takeaways li::before { left: 16px; }
+      .nav .quick a span { display: none; }
+      section { padding-top: 52px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="Back to top"><img src="static/epfl-logo.png" alt="EPFL" width="68" height="20"></a>
+    <ul>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#method">Method</a></li>
+      <li><a href="#results">Results</a></li>
+      <li><a href="#poster">Poster</a></li>
+      <li><a href="#bibtex">BibTeX</a></li>
+    </ul>
+    <div class="quick">
+      <a href="static/paper.pdf" aria-label="Paper (PDF)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span>Paper</span></a>
+      <a href="https://github.com/ralvarezlucend/llm-conditioning-and-memorization" aria-label="Code on GitHub">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg><span>Code</span></a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="venue">NeurIPS 2026 Workshops</div>
+    <h1>Conditioning Structure, Not Entropy Alone, Predicts Memorization Dynamics</h1>
+    <p class="authors">
+      <span>Rodrigo Alvarez Lucendo<sup>*</sup></span>
+      <span>Madhur Panwar</span>
+      <span>Gail Weiss</span>
+      <span>Antoine Bosselut</span>
+    </p>
+    <p class="affil">EPFL, Switzerland</p>
+
+    <div class="buttons">
+      <a class="btn" href="static/paper.pdf">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>
+        Paper
+      </a>
+      <a class="btn" href="https://github.com/ralvarezlucend/llm-conditioning-and-memorization">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+        Code
+      </a>
+      <a class="btn ghost" href="#poster">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h8M8 11h8M8 15h4"/></svg>
+        Poster
+      </a>
+      <a class="btn ghost" href="#bibtex">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h4v4c0 3-1.5 5-4 6M15 7h4v4c0 3-1.5 5-4 6"/></svg>
+        BibTeX
+      </a>
+    </div>
+    <p class="footnote">* Work done as part of a master’s thesis at EPFL.</p>
+  </div>
+</header>
+
+<main>
+  <!-- ================= OVERVIEW ================= -->
+  <div class="wrap" id="overview">
+    <p class="tldr">Two datasets can hold <b>the same number of bits</b> and still be memorized at <b>very different speeds</b>. What predicts the speed is how hard it is to find the prefix cue that tells one training sequence apart from the others.</p>
+
+    <figure class="teaser">
+      <div class="pair teaser-grid">
+        <div>
+          <a class="zoom" href="static/figures/iso-prefix-em.png"><img src="static/figures/iso-prefix-em.png" width="1800" height="885" alt="Exact match over training steps for five datasets with the same 240-bit prefix information. V=1024, L=24 is memorized first and V=4, L=120 last."></a>
+          <div class="subcap"><span>(a)</span>Same 240 bits of prefix information, different speed</div>
+        </div>
+        <div>
+          <a class="zoom" href="static/figures/conditions_14m.png"><img src="static/figures/conditions_14m.png" width="1800" height="1074" alt="Exact match over training steps for conditioning Levels 0, 1 and 2 in a four-layer model. Level 0 reaches exact match first, then Level 1, then Level 2."></a>
+          <div class="subcap"><span>(b)</span>Harder retrieval rule, slower memorization</div>
+        </div>
+      </div>
+      <figcaption class="prose center" style="text-align:center"><b>Controlled memorization comparisons.</b> (a) With total prefix information fixed at 240 bits, a larger prefix vocabulary <span class="m"><i>V</i></span> makes each token more distinctive, so despite a shorter prefix length <span class="m"><i>L</i></span>, memorization is faster. (b) Memorization follows the order of the planted conditioning rule in a four-layer 25M-parameter model (three seeds; Level 2 also averages five position mappings).</figcaption>
+    </figure>
+  </div>
+
+  <div class="wrap"><hr class="sep"></div>
+
+  <!-- ================= ABSTRACT ================= -->
+  <section id="abstract">
+    <div class="wrap">
+      <div class="prose center">
+        <p class="eyebrow">Abstract</p>
+        <div class="abstract">
+          <p>Autoregressive language models do not memorize every training sequence at the same rate; yet, commonly studied predictors, such as entropy, tokenization, context length, model capacity, and repetition, do not specify how a model uses its prefix to retrieve a continuation. We study a complementary axis: the complexity of the <em>conditioning structure</em> that disambiguates one training sequence from the others.</p>
+          <p>In controlled GPT-2-style experiments, uniformly random prefixes with the same total information content are easier to use when their information is concentrated into fewer, more distinctive tokens. We construct synthetic datasets whose suffixes are deterministic under rules of increasing complexity: a local position-aware transition, a fixed prefix cue, or a position-dependent prefix cue. The resulting memorization curves preserve this ordering across one- and four-layer models and across dataset sizes from 500 to 24,000 sequences. In one-layer models, attention patterns visibly follow the planted cue locations. However, analogous interventions on WikiText yield no detectable separation, due to other interfering natural language cues. These results support disambiguation complexity as a useful controlled axis for studying memorization and, more broadly, training dynamics.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= METHOD ================= -->
+  <section id="method">
+    <div class="wrap">
+      <div class="prose">
+        <p class="eyebrow">Method</p>
+        <h2>Disambiguation as a controlled axis</h2>
+        <p>We view memorization as retrieving a continuation from cues in its prefix. A sequence is memorized when greedy decoding from its prefix reproduces the <em>entire</em> suffix (exact match). To memorize it, the model has to find positions in the prefix that tell this sequence apart from every other training sequence.</p>
+        <p>We plant that structure on purpose. Each dataset has random 50-token prefixes, and every suffix token is set by a lookup table (LUT) whose key follows one of three rules of increasing complexity. Each card follows the same short sequence: <b>colored arrows</b> come from the prefix cue a suffix token needs, and <b>gray arrows</b> from the previous token, which every level uses.</p>
+      </div>
+
+      <div class="levels">
+        <article class="level" data-level="0">
+          <div class="tag">Level 0</div>
+          <h3>Local transition</h3>
+          <div class="rule m"><i>x<sub>t</sub></i> = LUT(<i>x</i><sub><i>t</i>−1</sub>, <i>t</i>)</div>
+          <svg class="seq" data-level="0" viewBox="0 0 284 142" role="img" aria-label="Each suffix token depends only on the token before it. No arrows come from the prefix."></svg>
+          <table class="cue">
+            <tr><th>suffix position <span class="m"><i>t</i></span></th><td>6</td><td>7</td><td>8</td></tr>
+            <tr><th>prefix cue</th><td class="none">–</td><td class="none">–</td><td class="none">–</td></tr>
+          </table>
+          <p class="desc">Each suffix token is set by the token right before it and its position. Nothing in the prefix has to be looked up.</p>
+        </article>
+
+        <article class="level" data-level="1">
+          <div class="tag">Level 1</div>
+          <h3>One fixed cue position</h3>
+          <div class="rule m"><i>x<sub>t</sub></i> = LUT(<i>x</i><sub><i>t</i>−1</sub>, <i>t</i>, <i>x<sub>F</sub></i>)</div>
+          <svg class="seq" data-level="1" viewBox="0 0 284 142" role="img" aria-label="Every suffix token reads prefix position 2. All colored arrows start at the same token."></svg>
+          <table class="cue">
+            <tr><th>suffix position <span class="m"><i>t</i></span></th><td>6</td><td>7</td><td>8</td></tr>
+            <tr><th>prefix cue <span class="m"><i>F</i></span></th><td><span class="k">2</span></td><td><span class="k">2</span></td><td><span class="k">2</span></td></tr>
+          </table>
+          <p class="desc">Every suffix token also needs the token at one fixed prefix position (here <span class="m"><i>F</i> = 2</span>), so all colored arrows start at the same token. In attention, this shows up as a vertical band.</p>
+        </article>
+
+        <article class="level" data-level="2">
+          <div class="tag">Level 2</div>
+          <h3>Cue position depends on <span class="m"><i>t</i></span></h3>
+          <div class="rule m"><i>x<sub>t</sub></i> = LUT(<i>x</i><sub><i>t</i>−1</sub>, <i>t</i>, <i>x</i><sub><i>f</i>(<i>t</i>)</sub>)</div>
+          <svg class="seq" data-level="2" viewBox="0 0 284 142" role="img" aria-label="Each suffix token reads a different prefix position: 3, then 1, then 4."></svg>
+          <table class="cue">
+            <tr><th>suffix position <span class="m"><i>t</i></span></th><td>6</td><td>7</td><td>8</td></tr>
+            <tr><th>prefix cue <span class="m"><i>f</i>(<i>t</i>)</span></th><td><span class="k">3</span></td><td><span class="k">1</span></td><td><span class="k">4</span></td></tr>
+          </table>
+          <p class="desc">Each suffix token needs a different prefix position, <span class="m"><i>f</i>(<i>t</i>)</span>, so the colored arrows start somewhere new for every <span class="m"><i>t</i></span> and the model must learn where to look each time. In attention, this shows up as a diagonal or periodic pattern.</p>
+        </article>
+      </div>
+
+      <div class="callout prose">
+        <strong>Why distinctive tokens help.</strong> For a prefix position drawn uniformly from <span class="m"><i>V</i></span> symbols, two sequences share the same value with probability <span class="m">1/<i>V</i></span>, and among <span class="m"><i>N</i></span> sequences each value is shared by about <span class="m"><i>N</i>/<i>V</i></span> of them. A large collision group stays ambiguous unless other positions split it; a distinctive cue resolves it with a smaller, simpler conditioning set. Conditional entropy says whether a deterministic rule exists, not how hard it is for a transformer to locate.
+      </div>
+
+      <div class="specs">
+        <div class="spec"><b>Models</b>Decoder-only GPT-2-style transformers trained from scratch: one layer (6M) and four layers (25M non-embedding parameters).</div>
+        <div class="spec"><b>Data</b>6,000 sequences of length 100: a 50-token random prefix and a 50-token rule-generated suffix, vocabulary size 100, seeds {0, 1, 2}.</div>
+        <div class="spec"><b>Metric</b>Loss on suffix tokens only. Exact match: the fraction of training sequences whose full suffix is reproduced by greedy decoding.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RESULTS ================= -->
+  <section id="results">
+    <div class="wrap">
+      <p class="eyebrow">Results</p>
+      <h2>What predicts memorization speed</h2>
+
+      <!-- 1 -->
+      <div class="finding">
+        <div class="finding-head"><span class="num">1</span><h3>Entropy alone does not specify memorization order</h3></div>
+        <div class="finding-body">
+          <div class="prose">
+            <p>In the mixed WikiText/random setting of Panwar et al. (2025), structured WikiText is memorized before random sequences over a 10-token vocabulary. Raise the random vocabulary to 1,000 or 10,000 tokens and the order <b>flips</b>: random sequences reach exact recall first.</p>
+            <p>Holding total prefix information fixed at 240 bits (Fig. a above) makes the point directly. A larger vocabulary with a shorter prefix is memorized earlier, since the per-position collision probability falls from 1/4 to 1/1024. Distinctiveness and length move together by design here, but total prefix bits alone cannot be a sufficient predictor.</p>
+          </div>
+          <figure class="fig-block">
+            <a class="zoom" href="static/figures/hybrid-frozen-embd.png"><img src="static/figures/hybrid-frozen-embd.png" width="1800" height="495" loading="lazy" alt="Three panels of exact match over steps for WikiText versus random sequences with 10, 1000 and 10000 random tokens. With 10 tokens WikiText is memorized first; with 1000 and 10000 tokens the random data is memorized first."></a>
+            <figcaption><b>Mixed WikiText/random training.</b> Frozen pretrained GPT-2 token and positional embeddings keep the embedding parameterization fixed. Increasing the vocabulary size of the random dataset flips the memorization order.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="finding">
+        <div class="finding-head"><span class="num">2</span><h3>Planted conditioning structure predicts memorization rate</h3></div>
+        <div class="finding-body">
+          <div class="split">
+            <div>
+              <p>Level 0 is learned first, then Level 1, then Level 2 (Fig. b above). Smaller one-layer models keep the same order, with slower memorization and a wider gap between Levels 1 and 2.</p>
+              <p>The order also holds as the dataset grows from 500 to 24,000 sequences. With vocabulary size 100, a fixed prefix position is shared by about <span class="m"><i>N</i>/100</span> sequences, so Levels 1 and 2 must resolve more and more colliding examples while Level 0 never reads the prefix.</p>
+              <div class="stats">
+                <div class="stat s0"><div class="v">75</div><div class="l">Level 0, at every <span class="m"><i>N</i></span></div></div>
+                <div class="stat s1"><div class="v">750</div><div class="l">Level 1 at <span class="m"><i>N</i></span> = 24k, up from 100</div></div>
+                <div class="stat s2"><div class="v">2,025</div><div class="l">Level 2 at <span class="m"><i>N</i></span> = 24k, up from 100–125</div></div>
+              </div>
+              <p class="note">Steps to 99% exact match. A vocabulary-size ablation shows the same order, with the levels separating most clearly at <span class="m"><i>V</i></span> = 100 and 1,000.</p>
+            </div>
+            <figure>
+              <a class="zoom" href="static/figures/conditions-vary-n_scaling.png"><img src="static/figures/conditions-vary-n_scaling.png" width="1800" height="1347" loading="lazy" alt="Steps to 99% exact match versus number of sequences N from 500 to 24,000. Level 0 is flat, Level 1 grows slowly, Level 2 grows fastest to about 2,000 steps."></a>
+              <figcaption><b>Dataset-size scaling.</b> The level ordering persists for datasets of 500 to 24,000 sequences.</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="finding">
+        <div class="finding-head"><span class="num">3</span><h3>Attention follows the planted cues</h3></div>
+        <div class="finding-body">
+          <div class="prose">
+            <p>In a one-layer transformer, attention is the only operation that mixes positions, so its maps show where the model reads its cue. A fixed Level 1 cue at position 5 or 20 produces a sharp vertical band. The Level 2 lookback rule produces a diagonal, and the modulo rule a periodic pattern: each map mirrors the rule that generated the data.</p>
+          </div>
+          <figure class="fig-block">
+            <a class="zoom" href="static/figures/one-layer-attention.png"><img src="static/figures/one-layer-attention.png" width="1800" height="503" loading="lazy" alt="Four attention maps from suffix queries to prefix keys: vertical bands at prefix positions 5 and 20 for Level 1, a diagonal for Level 2 lookback, and a periodic pattern for Level 2 modulo 10."></a>
+            <div class="rules" aria-label="Planted rule for each panel">
+              <span style="left:15%" data-label="Level 1 (pos 5)" class="m"><i>x<sub>t</sub></i> = LUT(<i>x</i><sub><i>t</i>−1</sub>, <i>t</i>, <i>x</i><sub>5</sub>)</span>
+              <span style="left:37.4%" data-label="Level 1 (pos 20)" class="m"><i>x<sub>t</sub></i> = LUT(<i>x</i><sub><i>t</i>−1</sub>, <i>t</i>, <i>x</i><sub>20</sub>)</span>
+              <span style="left:59.8%" data-label="Level 2a (lookback)" class="m"><i>x<sub>t</sub></i> = LUT(<i>x</i><sub><i>t</i>−1</sub>, <i>t</i>, <i>x</i><sub><i>t</i>−2</sub>)</span>
+              <span style="left:82.3%" data-label="Level 2a (modulo 10)" class="m"><i>x<sub>t</sub></i> = LUT(<i>x</i><sub><i>t</i>−1</sub>, <i>t</i>, <i>x</i><sub><i>t</i> mod 10</sub>)</span>
+            </div>
+            <figcaption><b>Attention from suffix queries to prefix keys</b>, averaged over training sequences (max over heads) in a one-layer model. Fixed, diagonal and periodic patterns mirror the planted Level 1 and Level 2 cue locations.</figcaption>
+          </figure>
+          <p class="note prose">Attention is a diagnostic here, not a causal proof. The levels have matched unigram entropy and close bigram entropy, but differ in trigram entropy, so the model could also exploit higher-order <span class="m"><i>n</i></span>-gram statistics. Head ablations or activation patching are left to future work.</p>
+        </div>
+      </div>
+
+      <!-- 4 -->
+      <div class="finding">
+        <div class="finding-head"><span class="num">4</span><h3>A second hierarchy: how many prefix keys (<span class="m"><i>K</i></span>-arity)</h3></div>
+        <div class="finding-body">
+          <div class="prose">
+            <p>Instead of <em>where</em> the cue is, vary <em>how many</em> prefix tokens it takes. Each suffix token is a lookup of <span class="m"><i>K</i></span> distinct prefix positions plus the current position, <span class="m"><i>x<sub>t</sub></i> = LUT(<i>x</i><sub><i>φ</i><sub>1</sub>(<i>t</i>)</sub>, …, <i>x</i><sub><i>φ<sub>K</sub></i>(<i>t</i>)</sub>, <i>t</i>)</span>. With 20,000 sequences and vocabulary size 100, steps to exact recall follow <span class="m"><i>K</i> = 1 &lt; <i>K</i> = 2 &lt; <i>K</i> = 3</span>.</p>
+            <p>With fixed key positions, attention concentrates on one column for <span class="m"><i>K</i> = 1</span> and splits across two for <span class="m"><i>K</i> = 2</span>. At <span class="m"><i>K</i> = 3</span> it turns diffuse: finite-sample collisions can make a smaller subset sufficient, and the model may exploit correlations outside the designated keys.</p>
+          </div>
+          <figure class="fig-block">
+            <div class="pair karity-grid">
+              <a class="zoom" href="static/figures/karity-memorization-results.png"><img src="static/figures/karity-memorization-results.png" width="1800" height="1350" loading="lazy" alt="Exact match over steps for K=1, K=2 and K=3. K=1 is memorized almost immediately, K=2 around step 2000, K=3 around step 3000."></a>
+              <a class="zoom" href="static/figures/karity_fixed_random_attn.png"><img src="static/figures/karity_fixed_random_attn.png" width="1800" height="658" loading="lazy" alt="Attention maps for K=1, 2 and 3. K=1 shows one vertical band at prefix position 31, K=2 shows bands at 19 and 31, K=3 is diffuse."></a>
+            </div>
+            <figcaption><b>Exact match during training by key size <span class="m"><i>K</i></span></b>, and attention maps with fixed random key positions (triangles mark the planted hint positions).</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <!-- 5 -->
+      <div class="finding">
+        <div class="finding-head"><span class="num">5</span><h3>Natural language: a negative result <span class="badge">Open problem</span></h3></div>
+        <div class="finding-body">
+          <div class="prose">
+            <p>We tried four groups of WikiText interventions: a unique token at a fixed position, translated prefixes with and without a fixed identifier, Latin-family versus diverse multilingual groups, and paraphrased passages. The exact-match curves mostly overlapped.</p>
+            <p>Natural text carries many redundant lexical, syntactic and semantic cues. An inserted identifier can be sufficient in theory yet irrelevant to the strategy the optimizer picks, and attention stays diffuse. Translation also changes tokenization length, effective vocabulary and prefix entropy at once. Validating the framework on natural language is future work, and we welcome feedback on it.</p>
+          </div>
+          <figure class="fig-block">
+            <a class="zoom" href="static/figures/natural-language-layer0.png"><img src="static/figures/natural-language-layer0.png" width="1800" height="592" loading="lazy" alt="First-layer attention maps for WikiText, translated WikiText, and translated WikiText with an identifier at position 0. All three are diffuse, with no vertical band."></a>
+            <figcaption><b>Average first-layer attention in three natural-language conditions.</b> None shows the sharp vertical band of the synthetic fixed-cue task, even with a fixed identifier at position 0.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TAKEAWAYS ================= -->
+  <section id="takeaways">
+    <div class="wrap">
+      <div class="prose">
+        <p class="eyebrow">Takeaways</p>
+        <h2>In short</h2>
+        <ol class="takeaways">
+          <li><b>Bits are not the whole story.</b> At equal prefix information, concentrating it into fewer, more distinctive tokens speeds up memorization.</li>
+          <li><b>Conditioning structure predicts memorization rate.</b> Local &lt; fixed cue &lt; position-dependent cue, and <span class="m"><i>K</i> = 1 &lt; 2 &lt; 3</span>, across model, dataset and vocabulary sizes.</li>
+          <li><b>Attention patterns align with the planted cues</b> in one-layer models. In natural language, redundant cues blur the signal, which leaves real-world validation open.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= POSTER ================= -->
+  <section id="poster">
+    <div class="wrap">
+      <div class="poster-wrap">
+        <a class="zoom" href="static/poster.png"><img src="static/poster.png" width="1173" height="1634" loading="lazy" alt="Conference poster for the paper, summarizing the problem, the Level 0 to 2 datasets, results, attention analysis, dataset scaling, the K-arity hierarchy and the natural-language results."></a>
+        <div class="prose">
+          <p class="eyebrow">Poster</p>
+          <h2>The paper on one page</h2>
+          <p>The poster summarizes the problem, the three conditioning levels, the main results, and the attention analysis on one page.</p>
+          <div class="buttons" style="justify-content:flex-start;margin:22px 0 0">
+            <a class="btn" href="static/poster.png" download>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+              Download poster
+            </a>
+            <a class="btn ghost" href="static/paper.pdf">Read the paper</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= BIBTEX ================= -->
+  <section id="bibtex">
+    <div class="wrap">
+      <p class="eyebrow">Citation</p>
+      <h2>BibTeX</h2>
+      <div class="bib">
+        <button class="copy" type="button" id="copy-bib">Copy</button>
+<pre id="bib-text">@inproceedings{alvarezlucendo2026conditioning,
+  title     = {Conditioning Structure, Not Entropy Alone, Predicts Memorization Dynamics},
+  author    = {Alvarez Lucendo, Rodrigo and Panwar, Madhur and Weiss, Gail and Bosselut, Antoine},
+  booktitle = {NeurIPS 2026 Workshops},
+  year      = {2026}
+}</pre>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span><img src="static/epfl-logo.png" alt="EPFL" width="55" height="16"></span>
+    <span>Code: <a href="https://github.com/ralvarezlucend/llm-conditioning-and-memorization">github.com/ralvarezlucend/llm-conditioning-and-memorization</a></span>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Enlarged figure">
+  <button type="button" aria-label="Close">×</button>
+</div>
+
+<script>
+  /* ---------- Level diagrams (edit tokens and cue positions here) ---------- */
+  // One sequence per card: prefix positions 1-5, suffix positions 6-8. Same tokens everywhere, so only the arrows differ.
+  // cue[t] = the prefix position whose token the suffix token at position t needs (Level 0 needs none).
+  const TOKENS = [7, 4, 9, 2, 5, 'c', 'f', 'a'], P = 5;
+  const LEVELS = {
+    0: { c: '#f77189', soft: '#fde8ec', ink: '#b3304d', cue: {} },
+    1: { c: '#50b131', soft: '#e4f4de', ink: '#2c7419', cue: { 6: 2, 7: 2, 8: 2 } },
+    2: { c: '#3ba3ec', soft: '#e2f0fc', ink: '#19679f', cue: { 6: 3, 7: 1, 8: 4 } },
+  };
+  const S = 26, XS = [8, 40, 72, 104, 136, 184, 216, 248], Y = 64, PREV = '#a3a9b4';
+  const cx = pos => XS[pos - 1] + S / 2, f2 = v => v.toFixed(2);
+
+  // Curved arrow from (x1, y) to a tip at (x2, y); bulge < 0 curves up, > 0 curves down. k = which suffix token it feeds.
+  function arrow(x1, x2, y, bulge, color, width, k) {
+    const qx = (x1 + x2) / 2, qy = y + 2 * bulge;
+    let ux = x2 - qx, uy = y - qy; const n = Math.hypot(ux, uy); ux /= n; uy /= n;
+    const bx = x2 - 5.5 * ux, by = y - 5.5 * uy, px = -uy * 2.8, py = ux * 2.8;
+    return `<path class="arc" pathLength="1" style="--k:${k}" d="M${f2(x1)} ${y} Q${f2(qx)} ${f2(qy)} ${f2(bx + 1.5 * ux)} ${f2(by + 1.5 * uy)}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round"/>`
+      + `<path class="head" style="--k:${k}" d="M${f2(x2)} ${y}L${f2(bx + px)} ${f2(by + py)}L${f2(bx - px)} ${f2(by - py)}Z" fill="${color}"/>`;
+  }
+
+  function drawLevel(svg) {
+    const L = LEVELS[svg.dataset.level], sources = Object.values(L.cue);
+    let out = `<line x1="173" y1="50" x2="173" y2="106" stroke="#c9ccd3" stroke-width="1.2" stroke-dasharray="3 3"/>`;
+    for (let t = P + 1; t <= TOKENS.length; t++) {
+      const k = t - P - 1;
+      out += arrow(cx(t - 1), cx(t) - 1, Y + S + 3, 9, PREV, 1.3, k);                       // previous token, below
+      const src = L.cue[t];
+      if (src) {                                                                             // prefix cue, above
+        const shared = sources.filter(v => v === src).length > 1, x1 = cx(src) + (shared ? (k - 1) * 3 : 0);
+        out += arrow(x1, cx(t) - 1, Y - 3, -(10 + 0.17 * (cx(t) - x1)), L.ink, 1.5, k);
+      }
+    }
+    TOKENS.forEach((tok, i) => {
+      const pos = i + 1, x = XS[i], suffix = pos > P, cue = sources.includes(pos), strong = suffix || cue;
+      const label = color => `<text x="${x + S / 2}" y="${Y + 17.5}" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="${strong ? 700 : 500}" fill="${color}">${tok}</text>`;
+      if (suffix) {
+        out += `<rect x="${x + .5}" y="${Y + .5}" width="${S - 1}" height="${S - 1}" rx="6" fill="#fff" stroke="${L.c}" stroke-dasharray="3 2.5"/>`
+          + `<g class="tgt" style="--k:${pos - P - 1}"><rect x="${x}" y="${Y}" width="${S}" height="${S}" rx="6" fill="${L.ink}"/>${label('#fff')}</g>`;
+      } else {
+        out += `<rect x="${x}" y="${Y}" width="${S}" height="${S}" rx="6" fill="${cue ? L.soft : '#f3f4f6'}" stroke="${cue ? L.c : '#e1e3e8'}" stroke-width="${cue ? 1.6 : 1}"/>${label(cue ? L.ink : '#8a8f9b')}`;
+      }
+      out += `<text x="${x + S / 2}" y="${Y + S + 28}" text-anchor="middle" font-family="Inter, sans-serif" font-size="10.5" font-weight="${strong ? 700 : 500}" fill="${strong ? L.ink : '#a2a7b1'}">${pos}</text>`;
+    });
+    const caps = (x, s) => `<text x="${x}" y="${Y + S + 46}" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" letter-spacing="1.2" font-weight="600" fill="#a2a7b1">${s}</text>`;
+    svg.innerHTML = out + caps(85, 'PREFIX') + caps(229, 'SUFFIX');
+  }
+  document.querySelectorAll('svg.seq').forEach(drawLevel);
+
+  // The one animation on the page: when a diagram scrolls into view, its suffix fills in one token at a time,
+  // each arriving with the arrows that feed it. Skipped for reduced motion.
+  function playLevel(card) {
+    card.classList.add('reset'); card.classList.remove('play');
+    void card.offsetWidth;                       // jump back to the start without animating
+    card.classList.remove('reset');
+    void card.offsetWidth;
+    card.classList.add('play');
+  }
+  if (matchMedia('(prefers-reduced-motion: no-preference)').matches && 'IntersectionObserver' in window) {
+    const cards = document.querySelectorAll('.level');
+    const io = new IntersectionObserver(entries => entries.forEach(en => {
+      if (en.isIntersecting) { io.unobserve(en.target); en.target.classList.add('play'); }
+    }), { threshold: 0.4 });
+    cards.forEach(card => {
+      card.classList.add('armed');
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'replay'; b.title = 'Replay'; b.setAttribute('aria-label', 'Replay the animation');
+      b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>';
+      b.addEventListener('click', () => playLevel(card));
+      card.appendChild(b);
+      io.observe(card);
+    });
+  }
+
+  /* ---------- Lightbox ---------- */
+  const lb = document.getElementById('lightbox'), lbImg = document.createElement('img');
+  document.querySelectorAll('a.zoom').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    const img = a.querySelector('img');
+    lbImg.src = a.getAttribute('href'); lbImg.alt = img ? img.alt : '';
+    if (!lbImg.isConnected) lb.appendChild(lbImg);
+    lb.classList.add('open'); document.body.style.overflow = 'hidden';
+    lb.querySelector('button').focus();
+  }));
+  const closeLb = () => { lb.classList.remove('open'); document.body.style.overflow = ''; };
+  lb.addEventListener('click', closeLb);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
+
+  /* ---------- Copy BibTeX ---------- */
+  document.getElementById('copy-bib').addEventListener('click', async e => {
+    const btn = e.currentTarget, text = document.getElementById('bib-text').textContent;
+    try { await navigator.clipboard.writeText(text); btn.textContent = 'Copied'; }
+    catch (err) {
+      // Clipboard API unavailable (http, iframe, permissions): select the text and try the legacy copy command.
+      const r = document.createRange(); r.selectNodeContents(document.getElementById('bib-text'));
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch (_) {}
+      btn.textContent = ok ? 'Copied' : (/Mac|iPhone|iPad/.test(navigator.platform) ? 'Press ⌘C' : 'Press Ctrl+C');
+    }
+    setTimeout(() => (btn.textContent = 'Copy'), 1600);
+  });
+
+  /* ---------- Nav: border on scroll + active section ---------- */
+  const nav = document.getElementById('nav');
+  const onScroll = () => nav.classList.toggle('scrolled', scrollY > 8);
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  const links = [...document.querySelectorAll('.nav ul a')];
+  const targets = links.map(a => document.querySelector(a.getAttribute('href')));
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (en.isIntersecting) links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id));
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    // the header has no nav link, so observing it clears the highlight when scrolled back to the top
+    [document.getElementById('top'), ...targets].forEach(t => t && io.observe(t));
+  }
+</script>
+</body>
+</html>
